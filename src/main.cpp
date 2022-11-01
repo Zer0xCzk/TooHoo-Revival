@@ -16,11 +16,11 @@ void RenderFrame(float dt);
 #define WH 1080
 
 //NOTE: FIGURE OUT HOW TO  SPRITES
-Object Player { WW / 2, WH / 2, 64, 64, 500 };
-Object Enemy[]{ WW / 2, WH / 2, 64, 64};
-Object PBullet[]{ WW / 2, WH / 2, 64, 64};
-Object EBullet[]{ WW / 2, WH / 2, 64, 64};
-int LastSpawn = 0;
+Object player { WW / 2, WH / 2, 64, 64, 500 };
+Object enemy[5]{ WW / 2, WH / 2, 64, 64, 500, Right};
+Object pbullet[]{ WW / 2, WH / 2, 64, 64};
+Object ebullet[]{ WW / 2, WH / 2, 64, 64};
+int LastSpawn = 200;
 
 //=============================================================================
 int main(int argc, char* argv[])
@@ -47,24 +47,53 @@ int main(int argc, char* argv[])
 
 void EnemySpawn()
 {
+	int current = 0;
 	//rand() % WW
 	int initial = 600;
-	if (LastSpawn > 2)
+
+	for (int i = 0; i < sizeof(enemy) / sizeof(Object); i++)
 	{
-		for (int i = 0; i <= sizeof(Enemy); i++)
+		if (!enemy[i].live && LastSpawn >= 250)
 		{
-			if (Enemy[i].alive == 0)
-			{
-				Enemy[i].alive = true;
-				Enemy[i].box.x = initial;
-				Enemy[i].box.y = 0;
-			}
+			//current = i;
+			enemy[i].live = true;
+			enemy[i].box.x = initial;
+			enemy[i].box.y = 0;
+			enemy[i].type = Roamer;
+			LastSpawn = 0;
+			break;
 		}
-		LastSpawn = 0;
 	}
-	else
+	LastSpawn++;
+}
+
+void PosUpdate(float dt)
+{
+	for (int i = 0; i < 100; i++)
 	{
-		LastSpawn++;
+		if (enemy[i].live)
+		{
+			switch (enemy[i].type)
+			case Roamer:
+				enemy[i].box.y += (int)(enemy[i].speed / 10 * dt + 0.5f);
+				if (enemy[i].direction == Right)
+				{
+					enemy[i].box.x += (int)(enemy[i].speed * dt + 0.5f);
+				}
+				else
+				{
+					enemy[i].box.x -= (int)(enemy[i].speed * dt + 0.5f);
+				}
+				if (enemy[i].box.x + enemy[i].box.w >= WW)
+				{
+					enemy[i].direction = Left;
+				}
+				if (enemy[i].box.x <= 0)
+				{
+					enemy[i].direction = Right;
+				}
+			break;
+		}
 	}
 }
 
@@ -76,21 +105,22 @@ void Update(float dt)
 	}
 	if (IsKeyDown(SDL_SCANCODE_UP))
 	{
-		Player.box.y -= (int)(Player.speed * dt + 0.5f);
+		player.box.y -= (int)(player.speed * dt + 0.5f);
 	}
 	if (IsKeyDown(SDL_SCANCODE_DOWN))
 	{
-		Player.box.y += (int)(Player.speed * dt + 0.5f);
+		player.box.y += (int)(player.speed * dt + 0.5f);
 	}
 	if (IsKeyDown(SDL_SCANCODE_LEFT))
 	{
-		Player.box.x -= (int)(Player.speed * dt + 0.5f);
+		player.box.x -= (int)(player.speed * dt + 0.5f);
 	}
 	if (IsKeyDown(SDL_SCANCODE_RIGHT))
 	{
-		Player.box.x += (int)(Player.speed * dt + 0.5f);
+		player.box.x += (int)(player.speed * dt + 0.5f);
 	}
 	EnemySpawn();
+	PosUpdate(dt);
 }
 
 void RenderFrame(float interpolation)
@@ -98,13 +128,13 @@ void RenderFrame(float interpolation)
 	SDL_SetRenderDrawColor(gRenderer, 65, 105, 225, 255);
 	SDL_RenderClear(gRenderer);
 	SDL_SetRenderDrawColor(gRenderer, 65, 225, 225, 255);
-	SDL_RenderFillRect(gRenderer, &Player.box);
-	for (int i = 0; i <= sizeof(Enemy); i++)
+	SDL_RenderFillRect(gRenderer, &player.box);
+	for (int i = 0; i <= sizeof(enemy) / sizeof(Object); i++)
 	{
-		if (Enemy[i].alive == 1)
+		if (enemy[i].live)
 		{
-			SDL_SetRenderDrawColor(gRenderer, 65, 0, 255, 0);
-			SDL_RenderFillRect(gRenderer, &Enemy[i].box);
+			SDL_SetRenderDrawColor(gRenderer, 255, 0, 255, 255);
+			SDL_RenderFillRect(gRenderer, &enemy[i].box);
 		}
 	}
 }
