@@ -17,10 +17,12 @@ void RenderFrame(float dt);
 
 //NOTE: FIGURE OUT HOW TO  SPRITES
 Object player { WW / 2, WH / 2, 64, 64, 500 };
-Object enemy[5]{ WW / 2, WH / 2, 64, 64, 500, Right};
+Object enemy[5]{};
 Object pbullet[]{ WW / 2, WH / 2, 64, 64};
 Object ebullet[]{ WW / 2, WH / 2, 64, 64};
 int LastSpawn = 200;
+//rand() % WW
+int initial = 600;
 
 //=============================================================================
 int main(int argc, char* argv[])
@@ -47,10 +49,6 @@ int main(int argc, char* argv[])
 
 void EnemySpawn()
 {
-	int current = 0;
-	//rand() % WW
-	int initial = 600;
-
 	for (int i = 0; i < sizeof(enemy) / sizeof(Object); i++)
 	{
 		if (!enemy[i].live && LastSpawn >= 250)
@@ -58,8 +56,12 @@ void EnemySpawn()
 			//current = i;
 			enemy[i].live = true;
 			enemy[i].box.x = initial;
-			enemy[i].box.y = 0;
+			enemy[i].box.y = 0 - enemy[i].box.h;
+			enemy[i].box.w = 64;
+			enemy[i].box.h = 64;
 			enemy[i].type = Roamer;
+			enemy[i].direction = Right;
+			enemy[i].speed = 500;
 			LastSpawn = 0;
 			break;
 		}
@@ -69,30 +71,36 @@ void EnemySpawn()
 
 void PosUpdate(float dt)
 {
-	for (int i = 0; i < 100; i++)
+	for (int i = 0; i <= 100; i++)
 	{
 		if (enemy[i].live)
 		{
 			switch (enemy[i].type)
-			case Roamer:
-				enemy[i].box.y += (int)(enemy[i].speed / 10 * dt + 0.5f);
-				if (enemy[i].direction == Right)
-				{
-					enemy[i].box.x += (int)(enemy[i].speed * dt + 0.5f);
-				}
-				else
-				{
-					enemy[i].box.x -= (int)(enemy[i].speed * dt + 0.5f);
-				}
-				if (enemy[i].box.x + enemy[i].box.w >= WW)
-				{
-					enemy[i].direction = Left;
-				}
-				if (enemy[i].box.x <= 0)
-				{
-					enemy[i].direction = Right;
-				}
-			break;
+			{
+				case Roamer:
+					enemy[i].box.y += (int)(enemy[i].speed / 10 * dt + 0.5f);
+					if (enemy[i].direction == Right)
+					{
+						enemy[i].box.x += (int)(enemy[i].speed * dt + 0.5f);
+					}
+					else
+					{
+						enemy[i].box.x -= (int)(enemy[i].speed * dt + 0.5f);
+					}
+					if (enemy[i].box.x + enemy[i].box.w >= WW)
+					{
+						enemy[i].direction = Left;
+					}
+					if (enemy[i].box.x <= 0)
+					{
+						enemy[i].direction = Right;
+					}
+					if (enemy[i].box.y>= WH)
+					{
+						enemy[i].live = false;
+					}
+					break;
+			}
 		}
 	}
 }
