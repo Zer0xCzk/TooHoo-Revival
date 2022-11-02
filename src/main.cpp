@@ -18,9 +18,10 @@ void RenderFrame(float dt);
 //NOTE: FIGURE OUT HOW TO  SPRITES
 Object player { WW / 2, WH / 2, 64, 64, 500 };
 Object enemy[5]{};
-Object pbullet[]{ WW / 2, WH / 2, 64, 64};
+Object pbullet[20]{ WW / 2, WH / 2, 64, 64};
 Object ebullet[]{ WW / 2, WH / 2, 64, 64};
 int LastSpawn = 200;
+int LastShot = 100;
 //rand() % WW
 int initial = 600;
 
@@ -53,12 +54,11 @@ void EnemySpawn()
 	{
 		if (!enemy[i].live && LastSpawn >= 250)
 		{
-			//current = i;
+			enemy[i].box.w = 64;
+			enemy[i].box.h = 64;
 			enemy[i].live = true;
 			enemy[i].box.x = initial;
 			enemy[i].box.y = 0 - enemy[i].box.h;
-			enemy[i].box.w = 64;
-			enemy[i].box.h = 64;
 			enemy[i].type = Roamer;
 			enemy[i].direction = Right;
 			enemy[i].speed = 500;
@@ -105,6 +105,22 @@ void PosUpdate(float dt)
 	}
 }
 
+void PlayerShoot ()
+{
+	for (int i = 0; i < sizeof(pbullet) / sizeof(Object); i++)
+	{
+		if (!pbullet[i].live && LastShot >= 60)
+		{
+			pbullet[i].box.w = 32;
+			pbullet[i].box.h = 64;
+			pbullet[i].live = true;
+			pbullet[i].box.x = player.box.x + player.box.w / 2 - pbullet[i].box.w / 2;
+			pbullet[i].box.y = player.box.y - pbullet[i].box.h;
+			break;
+		}
+	}
+}
+
 void Update(float dt)
 {
 	if (IsKeyDown(SDL_SCANCODE_ESCAPE))
@@ -127,6 +143,10 @@ void Update(float dt)
 	{
 		player.box.x += (int)(player.speed * dt + 0.5f);
 	}
+	if (IsKeyPressed(SDL_SCANCODE_Z))
+	{
+		PlayerShoot();
+	}
 	EnemySpawn();
 	PosUpdate(dt);
 }
@@ -137,12 +157,19 @@ void RenderFrame(float interpolation)
 	SDL_RenderClear(gRenderer);
 	SDL_SetRenderDrawColor(gRenderer, 65, 225, 225, 255);
 	SDL_RenderFillRect(gRenderer, &player.box);
+	SDL_SetRenderDrawColor(gRenderer, 255, 0, 255, 255);
 	for (int i = 0; i <= sizeof(enemy) / sizeof(Object); i++)
 	{
 		if (enemy[i].live)
 		{
-			SDL_SetRenderDrawColor(gRenderer, 255, 0, 255, 255);
 			SDL_RenderFillRect(gRenderer, &enemy[i].box);
+		}
+	}
+	for (int i = 0; i <= sizeof(pbullet) / sizeof(Object); i++)
+	{
+		if (pbullet[i].live)
+		{
+			SDL_RenderFillRect(gRenderer, &pbullet[i].box);
 		}
 	}
 }
