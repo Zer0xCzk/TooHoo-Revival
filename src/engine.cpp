@@ -2,6 +2,7 @@
 #include "SDL.h"
 #include "SDL_image.h"
 #include "SDL_ttf.h"
+#include "object.h"
 #include <stdbool.h>
 #include <stdio.h>
 #include <string.h>
