@@ -21,7 +21,7 @@ Object pbullet[10]{};
 Object ebullet[40]{};
 int lastspawn = 200;
 int lastshot = 0;
-int elastshot = 10;
+int elastshot = 120;
 int curbullet = 0;
 int curenemy = 0;
 
@@ -50,6 +50,7 @@ int main(int argc, char* argv[])
 
 void EnemySpawn()
 {
+	// Not actually random, idk, idc
 	int initial = rand() % WW;
 	for (int i = 0; i < sizeof(enemy) / sizeof(Object); i++)
 	{
@@ -59,7 +60,7 @@ void EnemySpawn()
 			enemy[i].box.h = 64;
 			enemy[i].live = true;
 			enemy[i].box.x = initial;
-			enemy[i].box.y = 0 - enemy[i].box.h;
+			enemy[i].box.y = 100 - enemy[i].box.h;
 			enemy[i].type = Shooter;
 			enemy[i].direction = Right;
 			enemy[i].speed = 400;
@@ -103,9 +104,9 @@ void EnemyShoot()
 					ebullet[i].box.x = enemy[i].box.x + enemy[i].box.w / 2 - ebullet[i].box.w / 2;
 					ebullet[i].box.y = enemy[i].box.y + ebullet[i].box.h;
 					ebullet[i].speed = 1000;
-					elastshot++;
 					break;
 				}
+				elastshot++;
 	}
 	if (elastshot > 120)
 	{
@@ -136,60 +137,70 @@ void ColUpdate()
 
 void PosUpdate(float dt)
 {
-	for (int i = 0; i <= 20; i++)
+	for (int i = 0; i <= 40; i++)
 	{
-		if (enemy[i].live)
+		int tmp1 = sizeof(enemy) / sizeof(Object);
+		if (sizeof(enemy) / sizeof(Object) >= i)
 		{
-			switch (enemy[i].type)
+			if (enemy[i].live)
 			{
-			case Shooter:
-				if (enemy[i].box.y <= player.box.y)
+				switch (enemy[i].type)
 				{
-					EnemyShoot();
+				case Shooter:
+					if (enemy[i].box.y <= player.box.y)
+					{
+						EnemyShoot();
+					}
+				case Roamer:
+					enemy[i].box.y += (int)(enemy[i].speed / 4 * dt + 0.5f);
+					if (enemy[i].direction == Right)
+					{
+						enemy[i].box.x += (int)(enemy[i].speed * dt + 0.5f);
+					}
+					else
+					{
+						enemy[i].box.x -= (int)(enemy[i].speed * dt + 0.5f);
+					}
+					if (enemy[i].box.x + enemy[i].box.w >= WW)
+					{
+						enemy[i].direction = Left;
+					}
+					if (enemy[i].box.x <= 0)
+					{
+						enemy[i].direction = Right;
+					}
+					if (enemy[i].box.y >= WH)
+					{
+						enemy[i].live = false;
+					}
+					break;
 				}
-			case Roamer:
-				enemy[i].box.y += (int)(enemy[i].speed / 4 * dt + 0.5f);
-				if (enemy[i].direction == Right)
-				{
-					enemy[i].box.x += (int)(enemy[i].speed * dt + 0.5f);
-				}
-				else
-				{
-					enemy[i].box.x -= (int)(enemy[i].speed * dt + 0.5f);
-				}
-				if (enemy[i].box.x + enemy[i].box.w >= WW)
-				{
-					enemy[i].direction = Left;
-				}
-				if (enemy[i].box.x <= 0)
-				{
-					enemy[i].direction = Right;
-				}
-				if (enemy[i].box.y >= WH)
-				{
-					enemy[i].live = false;
-				}
-				break;
 			}
 		}
-		if (pbullet[i].live)
-		{	
-			pbullet[i].box.y -= (int)(pbullet[i].speed * dt + 0.5f);
-			if (pbullet[i].box.y + pbullet[i].box.h <= 0)
+		if (sizeof(pbullet) / sizeof(Object) >= i)
+		{
+			if (pbullet[i].live)
 			{
-				pbullet[i].live = false;
-				pbullet[i].box.x = WW + WW;
-				pbullet[i].box.y = WH + WH;
+				pbullet[i].box.y -= (int)(pbullet[i].speed * dt + 0.5f);
+				if (pbullet[i].box.y + pbullet[i].box.h <= 0)
+				{
+					pbullet[i].live = false;
+					pbullet[i].box.x = WW + WW;
+					pbullet[i].box.y = WH + WH;
+				}
 			}
 		}
-		if (ebullet[i].live)
+		if (sizeof(ebullet) / sizeof(Object) >= i)
 		{
-			ebullet[i].box.y += (int)(ebullet[i].speed * dt + 0.5f);
-			if (ebullet[i].box.y >= WH)
+			if (ebullet[i].live)
 			{
-				ebullet[i].live = false;
-				ebullet[i].box.x = WW + WW;
-				ebullet[i].box.y = WH + WH;
+				ebullet[i].box.y += (int)(ebullet[i].speed * dt + 0.5f);
+				if (ebullet[i].box.y >= WH)
+				{
+					ebullet[i].live = false;
+					ebullet[i].box.x = WW + WW;
+					ebullet[i].box.y = WH + WH;
+				}
 			}
 		}
 	}
