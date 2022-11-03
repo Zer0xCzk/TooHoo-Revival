@@ -18,13 +18,14 @@ void RenderFrame(float dt);
 
 Object LBorder{0, 0, WW / 3, WH};
 Object RBorder{WW - WW/3, 0, WW / 3, WH };
-Object player{WW / 2, WH / 2, 64, 64, 500 };
+Object player{WW / 2, 3*WH / 4, 64, 64, 500 };
 Object enemy[10];
 Object pbullet[10];
 Object ebullet[40];
 float lastspawn = 80;
 float lastshot = 15;
 float elastshot = 60;
+bool initdir;
 //=============================================================================
 int main(int argc, char* argv[])
 {
@@ -56,15 +57,24 @@ void EnemySpawn(float dt)
 	double initial = rand() % WW/3 + WW/3;
 	for (int i = 0; i < sizeof(enemy) / sizeof(Object); i++)
 	{
-		if (!enemy[i].live && lastspawn >= (80 * dt))
+		if (!enemy[i].live && lastspawn >= (60 * dt))
 		{
+			bool heading;
 			enemy[i].box.w = 64;
 			enemy[i].box.h = 64;
 			enemy[i].live = true;
 			enemy[i].box.x = initial;
 			enemy[i].box.y = 100 - enemy[i].box.h;
 			enemy[i].type = Shooter;
-			enemy[i].direction = Right;
+			switch (rand() % 1)
+			{
+			case 0:
+				enemy[i].direction = Left;
+				break;
+			case 1:
+				enemy[i].direction = Right;
+				break;
+			}
 			enemy[i].speed = 400;
 			lastspawn = 0;
 			break;
@@ -77,14 +87,14 @@ void PlayerShoot(float dt)
 {
 	for (int i = 0; i < sizeof(pbullet) / sizeof(Object); i++)
 	{
-		if (!pbullet[i].live && lastshot >= (15 * dt))
+		if (!pbullet[i + 1].live && lastshot >= (15 * dt))
 		{
-			pbullet[i].box.w = 32;
-			pbullet[i].box.h = 64;
-			pbullet[i].live = true;
-			pbullet[i].box.x = player.box.x + player.box.w / 2 - pbullet[i].box.w / 2;
-			pbullet[i].box.y = player.box.y - pbullet[i].box.h;
-			pbullet[i].speed = 1000;
+			pbullet[i + 1].box.w = 32;
+			pbullet[i + 1].box.h = 64;
+			pbullet[i + 1].live = true;
+			pbullet[i + 1].box.x = player.box.x + player.box.w / 2 - pbullet[i + 1].box.w / 2;
+			pbullet[i + 1].box.y = player.box.y - pbullet[i + 1].box.h;
+			pbullet[i + 1].speed = 1000;
 			lastshot = 0;
 			break;
 		}
@@ -139,8 +149,8 @@ void ColUpdate()
 	}
 	for (int i = 0; i < sizeof(ebullet) / sizeof(Object); i++)
 	{
-		SDL_Point left_bottom = { ebullet[i].box.x, ebullet[i].box.y + ebullet[i].box.w};
-		SDL_Point right_bottom = { pbullet[i].box.x + pbullet[i].box.w, pbullet[i].box.y };
+		SDL_Point left_bottom = { ebullet[i].box.x, ebullet[i].box.y + ebullet[i].box.h};
+		SDL_Point right_bottom = { ebullet[i].box.x + ebullet[i].box.w, ebullet[i].box.y + ebullet[i].box.h};
 		if (SDL_PointInRect(&left_bottom, &player.box) || SDL_PointInRect(&right_bottom, &player.box))
 		{
 			ExitGame();
@@ -156,32 +166,26 @@ void PosUpdate(float dt)
 		{
 			if (enemy[i].live)
 			{
-				switch (enemy[i].type)
+				enemy[i].box.y += (int)(enemy[i].speed / 4 * dt + 0.5f);
+				if (enemy[i].direction == Right)
 				{
-				case Shooter:
-				case Roamer:
-					enemy[i].box.y += (int)(enemy[i].speed / 4 * dt + 0.5f);
-					if (enemy[i].direction == Right)
-					{
-						enemy[i].box.x += (int)(enemy[i].speed * dt + 0.5f);
-					}
-					else
-					{
-						enemy[i].box.x -= (int)(enemy[i].speed * dt + 0.5f);
-					}
-					if (enemy[i].box.x + enemy[i].box.w >= 2*WW/3)
-					{
-						enemy[i].direction = Left;
-					}
-					if (enemy[i].box.x <= WW/3)
-					{
-						enemy[i].direction = Right;
-					}
-					if (enemy[i].box.y >= WH)
-					{
-						enemy[i].live = false;
-					}
-					break;
+					enemy[i].box.x += (int)(enemy[i].speed * dt + 0.5f);
+				}
+				else
+				{
+					enemy[i].box.x -= (int)(enemy[i].speed * dt + 0.5f);
+				}
+				if (enemy[i].box.x + enemy[i].box.w > 2*WW/3)
+				{
+					enemy[i].direction = Left;
+				}
+				if (enemy[i].box.x < WW/3)
+				{
+					enemy[i].direction = Right;
+				}
+				if (enemy[i].box.y > WH)
+				{
+					enemy[i].live = false;
 				}
 			}
 		}
@@ -228,11 +232,11 @@ void Update(float dt)
 	{
 		player.box.y += (int)(player.speed * dt + 0.5f);
 	}
-	if (IsKeyDown(SDL_SCANCODE_LEFT) && player.box.x >= WW/3)
+	if (IsKeyDown(SDL_SCANCODE_LEFT) && player.box.x > WW/3)
 	{
 		player.box.x -= (int)(player.speed * dt + 0.5f);
 	}
-	if (IsKeyDown(SDL_SCANCODE_RIGHT) && player.box.x + player.box.w <= 2*WW/3)
+	if (IsKeyDown(SDL_SCANCODE_RIGHT) && player.box.x + player.box.w < 2*WW/3)
 	{
 		player.box.x += (int)(player.speed * dt + 0.5f);
 	}
