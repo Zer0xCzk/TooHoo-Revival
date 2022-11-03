@@ -4,6 +4,7 @@
 #include "SDL_image.h"
 #include "SDL_mixer.h"
 #include <stdlib.h>
+#include <time.h>
 #include <stdio.h>
 #include <stdbool.h>
 #include "object.h"
@@ -15,12 +16,14 @@ void RenderFrame(float dt);
 #define WW 1920
 #define WH 1080
 
-Object player{ WW / 2, WH / 2, 64, 64, 500 };
-Object enemy[10]{};
-Object pbullet[10]{};
-Object ebullet[40]{};
-float lastspawn = 200;
-float lastshot = 0;
+Object LBorder{0, 0, WW / 3, WH};
+Object RBorder{WW - WW/3, 0, WW / 3, WH };
+Object player{WW / 2, WH / 2, 64, 64, 500 };
+Object enemy[10];
+Object pbullet[10];
+Object ebullet[40];
+float lastspawn = 80;
+float lastshot = 15;
 float elastshot = 60;
 //=============================================================================
 int main(int argc, char* argv[])
@@ -35,6 +38,8 @@ int main(int argc, char* argv[])
 		return 1;
 	}
 
+	srand(time(NULL));
+
 	StartLoop(Update, RenderFrame);
 
 	CleanUp();
@@ -47,11 +52,11 @@ int main(int argc, char* argv[])
 
 void EnemySpawn(float dt)
 {
-	// Not actually random, idk, idc
-	int initial = rand() % WW;
+	// Random, but spews out utter nonsense
+	double initial = rand() % WW/3 + WW/3;
 	for (int i = 0; i < sizeof(enemy) / sizeof(Object); i++)
 	{
-		if (!enemy[i].live && lastspawn >= (100 * dt))
+		if (!enemy[i].live && lastspawn >= (80 * dt))
 		{
 			enemy[i].box.w = 64;
 			enemy[i].box.h = 64;
@@ -72,7 +77,7 @@ void PlayerShoot(float dt)
 {
 	for (int i = 0; i < sizeof(pbullet) / sizeof(Object); i++)
 	{
-		if (!pbullet[i].live && lastshot >= (10 * dt))
+		if (!pbullet[i].live && lastshot >= (15 * dt))
 		{
 			pbullet[i].box.w = 32;
 			pbullet[i].box.h = 64;
@@ -89,19 +94,20 @@ void PlayerShoot(float dt)
 
 void EnemyShoot(float dt)
 {
-	// This solution is very temporary, every enemy gets it's own bullet, the Sli
+	// This solution is very temporary, every enemy gets it's own bullet, the Slugger needs four, how I'll do that remains to be seen
 	for (int i = 0; i < sizeof(ebullet) / sizeof(Object); i++)
 	{
 		switch (enemy[i].type)
 			case Shooter:
-				if (!ebullet[i].live && elastshot >= 60 * dt)
+				// I am SO sorry for this fix, but bullet 0 just doesn't work, I HAVE to offset it
+				if (!ebullet[i + 1].live && elastshot >= 60 * dt)
 				{
-					ebullet[i].box.w = 32;
-					ebullet[i].box.h = 64;
-					ebullet[i].live = true;
-					ebullet[i].box.x = enemy[i].box.x + enemy[i].box.w / 2 - ebullet[i].box.w / 2;
-					ebullet[i].box.y = enemy[i].box.y + ebullet[i].box.h;
-					ebullet[i].speed = 1000;
+					ebullet[i + 1].box.w = 32;
+					ebullet[i + 1].box.h = 64;
+					ebullet[i + 1].live = true;
+					ebullet[i + 1].box.x = enemy[i].box.x + enemy[i].box.w / 2 - ebullet[i + 1].box.w / 2;
+					ebullet[i + 1].box.y = enemy[i].box.y + ebullet[i + 1].box.h;
+					ebullet[i + 1].speed = 1000;
 					break;
 				}
 	}
@@ -131,6 +137,15 @@ void ColUpdate()
 			}
 		}
 	}
+	for (int i = 0; i < sizeof(ebullet) / sizeof(Object); i++)
+	{
+		SDL_Point left_bottom = { ebullet[i].box.x, ebullet[i].box.y + ebullet[i].box.w};
+		SDL_Point right_bottom = { pbullet[i].box.x + pbullet[i].box.w, pbullet[i].box.y };
+		if (SDL_PointInRect(&left_bottom, &player.box) || SDL_PointInRect(&right_bottom, &player.box))
+		{
+			ExitGame();
+		}
+	}
 }
 
 void PosUpdate(float dt)
@@ -154,11 +169,11 @@ void PosUpdate(float dt)
 					{
 						enemy[i].box.x -= (int)(enemy[i].speed * dt + 0.5f);
 					}
-					if (enemy[i].box.x + enemy[i].box.w >= WW)
+					if (enemy[i].box.x + enemy[i].box.w >= 2*WW/3)
 					{
 						enemy[i].direction = Left;
 					}
-					if (enemy[i].box.x <= 0)
+					if (enemy[i].box.x <= WW/3)
 					{
 						enemy[i].direction = Right;
 					}
@@ -213,17 +228,21 @@ void Update(float dt)
 	{
 		player.box.y += (int)(player.speed * dt + 0.5f);
 	}
-	if (IsKeyDown(SDL_SCANCODE_LEFT) && player.box.x >= 0)
+	if (IsKeyDown(SDL_SCANCODE_LEFT) && player.box.x >= WW/3)
 	{
 		player.box.x -= (int)(player.speed * dt + 0.5f);
 	}
-	if (IsKeyDown(SDL_SCANCODE_RIGHT) && player.box.x + player.box.w <= WW)
+	if (IsKeyDown(SDL_SCANCODE_RIGHT) && player.box.x + player.box.w <= 2*WW/3)
 	{
 		player.box.x += (int)(player.speed * dt + 0.5f);
 	}
 	if (IsKeyDown(SDL_SCANCODE_Z))
 	{
 		PlayerShoot(dt);
+	}
+	if (IsKeyUp(SDL_SCANCODE_Z))
+	{
+		lastshot = 15;
 	}
 	EnemyShoot(dt);
 	EnemySpawn(dt);
@@ -233,8 +252,11 @@ void Update(float dt)
 
 void RenderFrame(float interpolation)
 {
-	SDL_SetRenderDrawColor(gRenderer, 0, 0, 0, 255);
+	SDL_SetRenderDrawColor(gRenderer, 255, 255, 255, 255);
 	SDL_RenderClear(gRenderer);
+	SDL_SetRenderDrawColor(gRenderer, 0, 0, 0, 255);
+	SDL_RenderFillRect(gRenderer, &LBorder.box);
+	SDL_RenderFillRect(gRenderer, &RBorder.box);
 	SDL_SetRenderDrawColor(gRenderer, 65, 225, 225, 255);
 	SDL_RenderFillRect(gRenderer, &player.box);
 	SDL_SetRenderDrawColor(gRenderer, 255, 0, 255, 255);

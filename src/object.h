@@ -1,6 +1,6 @@
 #pragma once
 
-enum Type { Player, Roamer, Shooter, Slugger};
+enum Type { Default, Roamer, Shooter, Slugger};
 enum Heading { Left, Right };
 
 struct Object
