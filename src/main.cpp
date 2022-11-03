@@ -19,12 +19,9 @@ Object player{ WW / 2, WH / 2, 64, 64, 500 };
 Object enemy[10]{};
 Object pbullet[10]{};
 Object ebullet[40]{};
-int lastspawn = 200;
-int lastshot = 0;
-int elastshot = 120;
-int curbullet = 0;
-int curenemy = 0;
-
+float lastspawn = 200;
+float lastshot = 0;
+float elastshot = 60;
 //=============================================================================
 int main(int argc, char* argv[])
 {
@@ -48,13 +45,13 @@ int main(int argc, char* argv[])
 
 //=============================================================================
 
-void EnemySpawn()
+void EnemySpawn(float dt)
 {
 	// Not actually random, idk, idc
 	int initial = rand() % WW;
 	for (int i = 0; i < sizeof(enemy) / sizeof(Object); i++)
 	{
-		if (!enemy[i].live && lastspawn >= 100)
+		if (!enemy[i].live && lastspawn >= (100 * dt))
 		{
 			enemy[i].box.w = 64;
 			enemy[i].box.h = 64;
@@ -68,14 +65,14 @@ void EnemySpawn()
 			break;
 		}
 	}
-	lastspawn++;
+	lastspawn += dt;
 }
 
-void PlayerShoot()
+void PlayerShoot(float dt)
 {
 	for (int i = 0; i < sizeof(pbullet) / sizeof(Object); i++)
 	{
-		if (!pbullet[i].live && lastshot >= 10)
+		if (!pbullet[i].live && lastshot >= (10 * dt))
 		{
 			pbullet[i].box.w = 32;
 			pbullet[i].box.h = 64;
@@ -87,16 +84,17 @@ void PlayerShoot()
 			break;
 		}
 	}
-	lastshot++;
+	lastshot += dt;
 }
 
-void EnemyShoot()
+void EnemyShoot(float dt)
 {
+	// This solution is very temporary, every enemy gets it's own bullet, the Sli
 	for (int i = 0; i < sizeof(ebullet) / sizeof(Object); i++)
 	{
 		switch (enemy[i].type)
 			case Shooter:
-				if (!ebullet[i].live && elastshot >= 120)
+				if (!ebullet[i].live && elastshot >= 60 * dt)
 				{
 					ebullet[i].box.w = 32;
 					ebullet[i].box.h = 64;
@@ -106,9 +104,9 @@ void EnemyShoot()
 					ebullet[i].speed = 1000;
 					break;
 				}
-				elastshot++;
 	}
-	if (elastshot > 120)
+	elastshot += dt;
+	if (elastshot > (60 + 1)* dt)
 	{
 		elastshot = 0;
 	}
@@ -139,7 +137,6 @@ void PosUpdate(float dt)
 {
 	for (int i = 0; i <= 40; i++)
 	{
-		int tmp1 = sizeof(enemy) / sizeof(Object);
 		if (sizeof(enemy) / sizeof(Object) >= i)
 		{
 			if (enemy[i].live)
@@ -147,10 +144,6 @@ void PosUpdate(float dt)
 				switch (enemy[i].type)
 				{
 				case Shooter:
-					if (enemy[i].box.y <= player.box.y)
-					{
-						EnemyShoot();
-					}
 				case Roamer:
 					enemy[i].box.y += (int)(enemy[i].speed / 4 * dt + 0.5f);
 					if (enemy[i].direction == Right)
@@ -230,9 +223,10 @@ void Update(float dt)
 	}
 	if (IsKeyDown(SDL_SCANCODE_Z))
 	{
-		PlayerShoot();
+		PlayerShoot(dt);
 	}
-	EnemySpawn();
+	EnemyShoot(dt);
+	EnemySpawn(dt);
 	ColUpdate();
 	PosUpdate(dt);
 }
