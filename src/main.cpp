@@ -18,8 +18,8 @@ void RenderFrame(float dt);
 
 Object LBorder{0, 0, WW / 3, WH};
 Object RBorder{WW - WW/3, 0, WW / 3, WH };
-Object player{WW / 2, 3*WH / 4, 64, 64, 500 };
-Object enemy[10];
+Object player{WW / 2, 3*WH / 4, 48, 48, 500 };
+Object enemy[15] {-WW, -WH, 48, 48};
 Object pbullet[10];
 Object ebullet[40];
 float lastspawn = 80;
@@ -53,19 +53,19 @@ int main(int argc, char* argv[])
 
 void EnemySpawn(float dt)
 {
-	// Random, but spews out utter nonsense
-	double initial = rand() % WW/3 + WW/3;
+	double initial = rand() % (WW/3 - 64) + WW / 3;
+	int etype = rand() % 2 + 1;
 	for (int i = 0; i < sizeof(enemy) / sizeof(Object); i++)
 	{
-		if (!enemy[i].live && lastspawn >= (60 * dt))
+		if (!enemy[i].live && lastspawn >= (30 * dt))
 		{
 			bool heading;
-			enemy[i].box.w = 64;
-			enemy[i].box.h = 64;
+			enemy[i].box.w = 48;
+			enemy[i].box.h = 48;
 			enemy[i].live = true;
 			enemy[i].box.x = initial;
 			enemy[i].box.y = 100 - enemy[i].box.h;
-			enemy[i].type = Shooter;
+			enemy[i].type = (Type)etype;
 			switch (rand() % 1)
 			{
 			case 0:
@@ -87,10 +87,10 @@ void PlayerShoot(float dt)
 {
 	for (int i = 0; i < sizeof(pbullet) / sizeof(Object); i++)
 	{
-		if (!pbullet[i + 1].live && lastshot >= (15 * dt))
+		if (!pbullet[i + 1].live && lastshot >= (12 * dt))
 		{
-			pbullet[i + 1].box.w = 32;
-			pbullet[i + 1].box.h = 64;
+			pbullet[i + 1].box.w = 16;
+			pbullet[i + 1].box.h = 48;
 			pbullet[i + 1].live = true;
 			pbullet[i + 1].box.x = player.box.x + player.box.w / 2 - pbullet[i + 1].box.w / 2;
 			pbullet[i + 1].box.y = player.box.y - pbullet[i + 1].box.h;
@@ -112,8 +112,8 @@ void EnemyShoot(float dt)
 				// I am SO sorry for this fix, but bullet 0 just doesn't work, I HAVE to offset it
 				if (!ebullet[i + 1].live && elastshot >= 60 * dt)
 				{
-					ebullet[i + 1].box.w = 32;
-					ebullet[i + 1].box.h = 64;
+					ebullet[i + 1].box.w = 16;
+					ebullet[i + 1].box.h = 48;
 					ebullet[i + 1].live = true;
 					ebullet[i + 1].box.x = enemy[i].box.x + enemy[i].box.w / 2 - ebullet[i + 1].box.w / 2;
 					ebullet[i + 1].box.y = enemy[i].box.y + ebullet[i + 1].box.h;
@@ -166,7 +166,7 @@ void PosUpdate(float dt)
 		{
 			if (enemy[i].live)
 			{
-				enemy[i].box.y += (int)(enemy[i].speed / 4 * dt + 0.5f);
+				enemy[i].box.y += (int)(enemy[i].speed / 2 * dt + 0.5f);
 				if (enemy[i].direction == Right)
 				{
 					enemy[i].box.x += (int)(enemy[i].speed * dt + 0.5f);
