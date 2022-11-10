@@ -1,3 +1,3 @@
-Back in first grade high I made a Touhou clone, it wasn't any good because I wasn't a very good programmer
+Back in first grade high school I made a Touhou clone, it wasn't any good because I wasn't a very good programmer
 
 Now, in second grade, I'm just as bad at programming, but have decided to try making this game again
