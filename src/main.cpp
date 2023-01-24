@@ -130,6 +130,7 @@ void EnemyShoot(float dt)
 
 void ColUpdate()
 {
+	// Point of pbullet in Enemy
 	for (int i = 0; i < sizeof(pbullet) / sizeof(Object); i++)
 	{
 		for (int j = 0; j < sizeof(enemy) / sizeof(Object); j++)
@@ -147,11 +148,22 @@ void ColUpdate()
 			}
 		}
 	}
+	// Point of ebullet in Player
 	for (int i = 0; i < sizeof(ebullet) / sizeof(Object); i++)
 	{
 		SDL_Point left_bottom = { ebullet[i].box.x, ebullet[i].box.y + ebullet[i].box.h};
 		SDL_Point right_bottom = { ebullet[i].box.x + ebullet[i].box.w, ebullet[i].box.y + ebullet[i].box.h};
 		if (SDL_PointInRect(&left_bottom, &player.box) || SDL_PointInRect(&right_bottom, &player.box))
+		{
+			ExitGame();
+		}
+	}
+	// Point of Enemy in Player
+	for (int i = 0; i < sizeof(enemy); i++)
+	{
+		SDL_Point left_bottom = { enemy[i].box.x, enemy[i].box.y + enemy[i].box.h };
+		SDL_Point right_bottom = { enemy[i].box.x + enemy[i].box.w, enemy[i].box.y + enemy[i].box.h};
+		if ((SDL_PointInRect(&left_bottom, &player.box) || SDL_PointInRect(&right_bottom, &player.box)) && (enemy[i].type == 2 /*Roamer*/ ))
 		{
 			ExitGame();
 		}
@@ -166,15 +178,25 @@ void PosUpdate(float dt)
 		{
 			if (enemy[i].live)
 			{
+				switch (enemy[i].type)
+				{
+					case 1:
+						if (enemy[i].direction == Right)
+						{
+							enemy[i].box.x += (int)(enemy[i].speed * dt + 0.5f);
+						}
+						else
+						{
+							enemy[i].box.x -= (int)(enemy[i].speed * dt + 0.5f);
+						}
+					break;
+					case 2:
+
+					break;
+				}
+					
 				enemy[i].box.y += (int)(enemy[i].speed / 2 * dt + 0.5f);
-				if (enemy[i].direction == Right)
-				{
-					enemy[i].box.x += (int)(enemy[i].speed * dt + 0.5f);
-				}
-				else
-				{
-					enemy[i].box.x -= (int)(enemy[i].speed * dt + 0.5f);
-				}
+				
 				if (enemy[i].box.x + enemy[i].box.w > 2*WW/3)
 				{
 					enemy[i].direction = Left;
