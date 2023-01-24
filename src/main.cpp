@@ -13,8 +13,8 @@
 void Update(float dt);
 void RenderFrame(float dt);
 
-#define WW 1920
-#define WH 1080
+#define WW 1200
+#define WH 900
 
 Object LBorder{0, 0, WW / 3, WH};
 Object RBorder{WW - WW/3, 0, WW / 3, WH };
@@ -64,8 +64,12 @@ void EnemySpawn(float dt)
 			enemy[i].box.h = 48;
 			enemy[i].live = true;
 			enemy[i].box.x = initial;
-			enemy[i].box.y = 100 - enemy[i].box.h;
+			enemy[i].box.y = 0 - enemy[i].box.h;
 			enemy[i].type = (Type)etype;
+			if (etype == Shooter)
+			{
+				enemy[i].box.y = 5 + enemy[i].box.h;
+			}
 			switch (rand() % 1)
 			{
 			case 0:
@@ -180,7 +184,9 @@ void PosUpdate(float dt)
 			{
 				switch (enemy[i].type)
 				{
-					case 1:
+					case Roamer:
+						enemy[i].box.y += (int)(enemy[i].speed / 2 * dt + 0.5f);
+					case Shooter:
 						if (enemy[i].direction == Right)
 						{
 							enemy[i].box.x += (int)(enemy[i].speed * dt + 0.5f);
@@ -190,13 +196,7 @@ void PosUpdate(float dt)
 							enemy[i].box.x -= (int)(enemy[i].speed * dt + 0.5f);
 						}
 					break;
-					case 2:
-
-					break;
 				}
-					
-				enemy[i].box.y += (int)(enemy[i].speed / 2 * dt + 0.5f);
-				
 				if (enemy[i].box.x + enemy[i].box.w > 2*WW/3)
 				{
 					enemy[i].direction = Left;
@@ -250,7 +250,7 @@ void Update(float dt)
 	{
 		player.box.y -= (int)(player.speed * dt + 0.5f);
 	}
-	if (IsKeyDown(SDL_SCANCODE_DOWN) && player.box.y + player.box.h <= WH)
+	if (IsKeyDown(SDL_SCANCODE_DOWN) && (player.box.y + 48) <= WH)
 	{
 		player.box.y += (int)(player.speed * dt + 0.5f);
 	}
