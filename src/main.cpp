@@ -16,12 +16,12 @@ void RenderFrame(float dt);
 #define WW 1200
 #define WH 900
 
-Object LBorder{0, 0, WW / 3, WH};
-Object RBorder{WW - WW/3, 0, WW / 3, WH };
-Object player{WW / 2, 3*WH / 4, 48, 48, 500 };
-Object enemy[15] {-WW, -WH, 48, 48};
-Object pbullet[10];
-Object ebullet[40];
+Object LBorder{0, 0, WW / 3, WH, 0, Left, Default, false, false };
+Object RBorder{WW - WW/3, 0, WW / 3, WH, 0, Right, Default, false, false  };
+Object player{WW / 2, 3*WH / 4, 48, 48, 500, Right, Default, true, true };
+Object enemy[15] {-WW, -WH, 48, 48, 500, Left, Default, false, true};
+Object pbullet[10] {-WW, -WH, 48, 16, 1000, Right, Default, false, true};
+Object ebullet[40] {-WW, -WH, 48, 16, 1000, Left, Default, false, true};;
 float lastspawn = 80;
 float lastshot = 15;
 float elastshot = 60;
@@ -39,7 +39,7 @@ int main(int argc, char* argv[])
 		return 1;
 	}
 
-	srand(time(NULL));
+	srand((unsigned int)time(NULL));
 
 	StartLoop(Update, RenderFrame);
 
@@ -53,13 +53,12 @@ int main(int argc, char* argv[])
 
 void EnemySpawn(float dt)
 {
-	double initial = rand() % (WW/3 - 64) + WW / 3;
+	int initial = rand() % (WW/3 - 64) + WW / 3;
 	int etype = rand() % 2 + 1;
-	for (int i = 0; i < sizeof(enemy) / sizeof(Object); i++)
+	for (long unsigned int i = 0; i < sizeof(enemy) / sizeof(Object); i++)
 	{
 		if (!enemy[i].live && lastspawn >= (30 * dt))
 		{
-			bool heading;
 			enemy[i].box.w = 48;
 			enemy[i].box.h = 48;
 			enemy[i].live = true;
@@ -89,7 +88,7 @@ void EnemySpawn(float dt)
 
 void PlayerShoot(float dt)
 {
-	for (int i = 0; i < sizeof(pbullet) / sizeof(Object); i++)
+	for (long unsigned int i = 0; i < sizeof(pbullet) / sizeof(Object); i++)
 	{
 		if (!pbullet[i + 1].live && lastshot >= (12 * dt))
 		{
@@ -109,9 +108,16 @@ void PlayerShoot(float dt)
 void EnemyShoot(float dt)
 {
 	// This solution is very temporary, every enemy gets it's own bullet, the Slugger needs four, how I'll do that remains to be seen
-	for (int i = 0; i < sizeof(ebullet) / sizeof(Object); i++)
+	for (long unsigned int i = 0; i < sizeof(ebullet) / sizeof(Object); i++)
 	{
 		switch (enemy[i].type)
+		{
+			case Default:
+			//fallthrough
+			case Slugger:
+			//fallthrough
+			case Roamer:
+				break;
 			case Shooter:
 				// I am SO sorry for this fix, but bullet 0 just doesn't work, I HAVE to offset it
 				if (!ebullet[i + 1].live && elastshot >= 60 * dt)
@@ -124,6 +130,7 @@ void EnemyShoot(float dt)
 					ebullet[i + 1].speed = 1000;
 					break;
 				}
+		}
 	}
 	elastshot += dt;
 	if (elastshot > (60 + 1)* dt)
@@ -135,9 +142,9 @@ void EnemyShoot(float dt)
 void ColUpdate()
 {
 	// Point of pbullet in Enemy
-	for (int i = 0; i < sizeof(pbullet) / sizeof(Object); i++)
+	for (long unsigned int i = 0; i < sizeof(pbullet) / sizeof(Object); i++)
 	{
-		for (int j = 0; j < sizeof(enemy) / sizeof(Object); j++)
+		for (long unsigned int j = 0; j < sizeof(enemy) / sizeof(Object); j++)
 		{
 			SDL_Point left_top = { pbullet[i].box.x, pbullet[i].box.y };
 			SDL_Point right_top = { pbullet[i].box.x + pbullet[i].box.w, pbullet[i].box.y };
@@ -153,7 +160,7 @@ void ColUpdate()
 		}
 	}
 	// Point of ebullet in Player
-	for (int i = 0; i < sizeof(ebullet) / sizeof(Object); i++)
+	for (long unsigned int i = 0; i < sizeof(ebullet) / sizeof(Object); i++)
 	{
 		SDL_Point left_bottom = { ebullet[i].box.x, ebullet[i].box.y + ebullet[i].box.h};
 		SDL_Point right_bottom = { ebullet[i].box.x + ebullet[i].box.w, ebullet[i].box.y + ebullet[i].box.h};
@@ -163,7 +170,7 @@ void ColUpdate()
 		}
 	}
 	// Point of Enemy in Player
-	for (int i = 0; i < sizeof(enemy); i++)
+	for (long unsigned int i = 0; i < sizeof(enemy); i++)
 	{
 		SDL_Point left_bottom = { enemy[i].box.x, enemy[i].box.y + enemy[i].box.h };
 		SDL_Point right_bottom = { enemy[i].box.x + enemy[i].box.w, enemy[i].box.y + enemy[i].box.h};
@@ -176,7 +183,7 @@ void ColUpdate()
 
 void PosUpdate(float dt)
 {
-	for (int i = 0; i <= 40; i++)
+	for (long unsigned int i = 0; i <= 40; i++)
 	{
 		if (sizeof(enemy) / sizeof(Object) >= i)
 		{
@@ -186,7 +193,10 @@ void PosUpdate(float dt)
 				{
 					case Roamer:
 						enemy[i].box.y += (int)(enemy[i].speed / 2 * dt + 0.5f);
+						//fallthrough
 					case Shooter:
+						//fallthrough
+					case Slugger:
 						if (enemy[i].direction == Right)
 						{
 							enemy[i].box.x += (int)(enemy[i].speed * dt + 0.5f);
@@ -195,7 +205,8 @@ void PosUpdate(float dt)
 						{
 							enemy[i].box.x -= (int)(enemy[i].speed * dt + 0.5f);
 						}
-					break;
+					case Default:
+						break;
 				}
 				if (enemy[i].box.x + enemy[i].box.w > 2*WW/3)
 				{
@@ -286,21 +297,21 @@ void RenderFrame(float interpolation)
 	SDL_SetRenderDrawColor(gRenderer, 65, 225, 225, 255);
 	SDL_RenderFillRect(gRenderer, &player.box);
 	SDL_SetRenderDrawColor(gRenderer, 255, 0, 255, 255);
-	for (int i = 0; i <= sizeof(enemy) / sizeof(Object); i++)
+	for (long unsigned int i = 0; i <= sizeof(enemy) / sizeof(Object); i++)
 	{
 		if (enemy[i].live)
 		{
 			SDL_RenderFillRect(gRenderer, &enemy[i].box);
 		}
 	}
-	for (int i = 0; i <= sizeof(pbullet) / sizeof(Object); i++)
+	for (long unsigned int i = 0; i <= sizeof(pbullet) / sizeof(Object); i++)
 	{
 		if (pbullet[i].live)
 		{
 			SDL_RenderFillRect(gRenderer, &pbullet[i].box);
 		}
 	}
-	for (int i = 0; i <= sizeof(ebullet) / sizeof(Object); i++)
+	for (long unsigned int i = 0; i <= sizeof(ebullet) / sizeof(Object); i++)
 	{
 		if (ebullet[i].live)
 		{
