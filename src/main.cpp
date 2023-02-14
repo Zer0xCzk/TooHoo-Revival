@@ -199,6 +199,7 @@ void PosUpdate(float dt)
 						{
 							enemy[i].box.x -= (int)(enemy[i].speed * dt + 0.5f);
 						}
+						//fallthrough
 					case Default:
 						break;
 					//Note: Could be done better with fallthrough somewhere
