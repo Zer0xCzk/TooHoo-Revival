@@ -65,10 +65,6 @@ void EnemySpawn(float dt)
 			enemy[i].box.x = initial;
 			enemy[i].box.y = 0 - enemy[i].box.h;
 			enemy[i].type = (Type)etype;
-			if (etype == Shooter)
-			{
-				enemy[i].box.y = 5 + enemy[i].box.h;
-			}
 			switch (rand() % 1)
 			{
 			case 0:
@@ -174,7 +170,7 @@ void ColUpdate()
 	{
 		SDL_Point left_bottom = { enemy[i].box.x, enemy[i].box.y + enemy[i].box.h };
 		SDL_Point right_bottom = { enemy[i].box.x + enemy[i].box.w, enemy[i].box.y + enemy[i].box.h};
-		if ((SDL_PointInRect(&left_bottom, &player.box) || SDL_PointInRect(&right_bottom, &player.box)) && (enemy[i].type == 2 /*Roamer*/ ))
+		if ((SDL_PointInRect(&left_bottom, &player.box) || SDL_PointInRect(&right_bottom, &player.box)) && (enemy[i].type == Roamer ))
 		{
 			ExitGame();
 		}
@@ -194,8 +190,6 @@ void PosUpdate(float dt)
 					case Roamer:
 						enemy[i].box.y += (int)(enemy[i].speed / 2 * dt + 0.5f);
 						//fallthrough
-					case Shooter:
-						//fallthrough
 					case Slugger:
 						if (enemy[i].direction == Right)
 						{
@@ -207,6 +201,23 @@ void PosUpdate(float dt)
 						}
 					case Default:
 						break;
+					//Note: Could be done better with fallthrough somewhere
+					case Shooter:
+						if (enemy[i].box.y < 25)
+						{
+							enemy[i].box.y += (int)(enemy[i].speed / 2 * dt + 0.5f);
+						}
+						else
+						{
+							if (enemy[i].direction == Right)
+							{
+								enemy[i].box.x += (int)(enemy[i].speed * dt + 0.5f);
+							}
+							else
+							{
+								enemy[i].box.x -= (int)(enemy[i].speed * dt + 0.5f);
+							}
+						}
 				}
 				if (enemy[i].box.x + enemy[i].box.w > 2*WW/3)
 				{
