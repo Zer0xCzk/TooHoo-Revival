@@ -19,9 +19,9 @@ void RenderFrame(float dt);
 Object LBorder{0, 0, WW / 3, WH, 0, Left, Default, false, false };
 Object RBorder{WW - WW/3, 0, WW / 3, WH, 0, Right, Default, false, false  };
 Object player{WW / 2, 3*WH / 4, 48, 48, 500, Right, Default, true, true };
-Object enemy[15] {-WW, -WH, 48, 48, 500, Left, Default, false, true};
-Object pbullet[10] {-WW, -WH, 48, 16, 1000, Right, Default, false, true};
-Object ebullet[40] {-WW, -WH, 48, 16, 1000, Left, Default, false, true};;
+Object enemy[15] {0, 0, 48, 48, 500, Left, Default, false, true};
+Object pbullet[10] {0, 0, 48, 16, 1000, Right, Default, false, true};
+Object ebullet[40] {0, 0, 48, 16, 1000, Left, Default, false, true};;
 float lastspawn = 80;
 float lastshot = 15;
 float elastshot = 60;
@@ -120,7 +120,7 @@ void EnemyShoot(float dt)
 				break;
 			case Shooter:
 				// I am SO sorry for this fix, but bullet 0 just doesn't work, I HAVE to offset it
-				if (!ebullet[i + 1].live && elastshot >= 60 * dt)
+				if (!ebullet[i + 1].live && elastshot >= 60 * dt && enemy[i].live)
 				{
 					ebullet[i + 1].box.w = 16;
 					ebullet[i + 1].box.h = 48;
@@ -152,10 +152,10 @@ void ColUpdate()
 			{
 				enemy[j].live = false;
 				pbullet[i].live = false;
-				enemy[j].box.y = -WH;
-				enemy[j].box.x = -WW;
- 				pbullet[i].box.x = 2 * WW;
-				pbullet[i].box.y = 2 * WH;
+				enemy[j].box.y = 0;
+				enemy[j].box.x = 0;
+ 				pbullet[i].box.x = 0;
+				pbullet[i].box.y = 0;
 			}
 		}
 	}
