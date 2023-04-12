@@ -1,4 +1,4 @@
-#This project has been to a [new repo](https://github.com/Zer0xCzk/TooHoo)
+# This project has been to a [new repo](https://github.com/Zer0xCzk/TooHoo)
 
 Back in first grade high school I made a Touhou clone, it wasn't any good because I wasn't a very good programmer
 
